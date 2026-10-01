@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+
+# ---------------------------------------------------------------------------
+# Generated 3D sources. These are the raw Trellis / Hunyuan3D outputs at 2048px
+# and ~40-100k triangles, plus the sci-fi asset pack the Chicago work replaced.
+# Together they are ~860 MB, which does not belong in a git repo on any plan.
+#
+# They ARE regenerable: art/images/props_chicago holds every reference image and
+# art/prompts/chicago_prompts.json every prompt, so
+#   python tools/hunyuan.py --batch art/images/props_chicago art/raw_glb/chicago_v2
+# rebuilds the lot at roughly 150 s of GPU time each. The decimated, textured
+# results that the game actually ships are committed in the Unity project.
+# ---------------------------------------------------------------------------
+art/raw_glb/
+art/poc_src/
+
+# Capture and audit output, all regenerable
+tools/shots/
+tools/reports/
+shots/
+
+# Build and scratch
+*.log
+.DS_Store
+Thumbs.db

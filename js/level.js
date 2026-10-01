@@ -1,0 +1,748 @@
+// level.js - Chicago blocks assembled from authored GLB buildings and vehicles.
+// The layout is data (BLOCKS/PROPS below) so a level is a placement list, not a generator:
+// every building is a Trellis model from the asset library, dropped at an explicit spot.
+import * as THREE from 'three';
+import { instantiate, loadTexture, normalize } from './assets.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { Water } from 'three/addons/objects/Water.js';
+
+// Catalog: asset key -> file + real-world height (m). Sizes come from the POC validation sheet.
+const CATALOG = {
+  skyscraper_016: { file: 'assets/models/props/building_skyscraper_016.glb', h: 46 },
+  skyscraper_020: { file: 'assets/models/props/building_skyscraper_020.glb', h: 52 },
+  skyscraper_030: { file: 'assets/models/props/building_skyscraper_030.glb', h: 40 },
+  skyscraper_044: { file: 'assets/models/props/building_skyscraper_044.glb', h: 34 },
+  skyscraper_046: { file: 'assets/models/props/building_skyscraper_046.glb', h: 58 },
+  skyscraper_048: { file: 'assets/models/props/building_skyscraper_048.glb', h: 44 },
+  residential_010: { file: 'assets/models/props/building_residential_010.glb', h: 9 },
+  residential_013: { file: 'assets/models/props/building_residential_013.glb', h: 11 },
+  residential_015: { file: 'assets/models/props/building_residential_015.glb', h: 10 },
+  residential_018: { file: 'assets/models/props/building_residential_018.glb', h: 22 },
+  residential_022: { file: 'assets/models/props/building_residential_022.glb', h: 16 },
+  commercial_006: { file: 'assets/models/props/building_commercial_006.glb', h: 8 },
+  industrial_019: { file: 'assets/models/props/building_industrial_019.glb', h: 9 },
+  industrial_020: { file: 'assets/models/props/building_industrial_020.glb', h: 18 },
+  car_001: { file: 'assets/models/props/vehicle_civilian_001.glb', h: 1.4, r: 1.6 },
+  car_003: { file: 'assets/models/props/vehicle_civilian_003.glb', h: 1.9, r: 1.7 },
+  van_009: { file: 'assets/models/props/vehicle_civilian_009.glb', h: 2.3, r: 1.9 },
+  truck_012: { file: 'assets/models/props/vehicle_civilian_012.glb', h: 3.0 },
+  excavator_013: { file: 'assets/models/props/vehicle_civilian_013.glb', h: 3.2 },
+  limo_014: { file: 'assets/models/props/vehicle_civilian_014.glb', h: 1.5, r: 2.2 },
+  mixer_019: { file: 'assets/models/props/vehicle_civilian_019.glb', h: 3.6 },
+  hover_021: { file: 'assets/models/props/vehicle_civilian_021.glb', h: 1.6, r: 1.6 },
+  dropship: { file: 'assets/models/props/vehicle_alien_003.glb', h: 9 },
+  tripod: { file: 'assets/models/props/vehicle_alien_019.glb', h: 14 },
+  // civic buildings (batch 3). Distinct silhouettes so the skyline is not all brick boxes.
+  hospital: { file: 'assets/models/props/building_hospital.glb', h: 24 },
+  office_mid: { file: 'assets/models/props/building_office_mid.glb', h: 28 },
+  police_station: { file: 'assets/models/props/building_police_station.glb', h: 12 },
+  fire_station: { file: 'assets/models/props/building_fire_station.glb', h: 10 },
+  // street props (batch 2). `optional`: skipped silently until the GLB exists.
+  barrier_jersey: { file: 'assets/models/props/barrier_jersey.glb', h: 0.9, optional: true, r: 1.1 },
+  sandbags: { file: 'assets/models/props/sandbags.glb', h: 1.0, optional: true, r: 1.1 },
+  hydrant: { file: 'assets/models/props/hydrant.glb', h: 0.8, optional: true, r: 0.3 },
+  traffic_light: { file: 'assets/models/props/traffic_light.glb', h: 5.5, optional: true, r: 0.35 },
+  dumpster: { file: 'assets/models/props/dumpster.glb', h: 1.5, optional: true, r: 1.2 },
+  car_wreck: { file: 'assets/models/props/car_wreck.glb', h: 1.3, optional: true, r: 2.0 },
+  rubble: { file: 'assets/models/props/rubble.glb', h: 1.2, optional: true, r: 1.6 },
+  drop_pod: { file: 'assets/models/props/drop_pod.glb', h: 3.2, optional: true, r: 1.6 },
+  bus_shelter: { file: 'assets/models/props/bus_shelter.glb', h: 2.8, optional: true, r: 2.0 },
+  l_track: { file: 'assets/models/props/l_track.glb', h: 7.5, optional: true, r: 0 },
+  ferris_wheel: { file: 'assets/models/props/ferris_wheel.glb', h: 45, optional: true, r: 6 },
+  tree: { file: 'assets/models/props/tree.glb', h: 9, optional: true, r: 0.45 },
+  planter: { file: 'assets/models/props/planter.glb', h: 1.0, optional: true, r: 0.7 },
+  bench: { file: 'assets/models/props/bench.glb', h: 0.9, optional: true, r: 0.6 },
+  trash_can: { file: 'assets/models/props/trash_can.glb', h: 1.1, optional: true, r: 0.4 },
+  mailbox: { file: 'assets/models/props/mailbox.glb', h: 1.3, optional: true, r: 0.4 },
+  news_box: { file: 'assets/models/props/news_box.glb', h: 1.2, optional: true, r: 0.4 },
+  cta_bus: { file: 'assets/models/props/cta_bus.glb', h: 3.3, optional: true, r: 0 },
+  taxi: { file: 'assets/models/props/taxi.glb', h: 1.5, optional: true, r: 1.7 },
+  police_car: { file: 'assets/models/props/police_car.glb', h: 1.5, optional: true, r: 1.8 },
+  container: { file: 'assets/models/props/container.glb', h: 2.6, optional: true, r: 0 },
+  pallets: { file: 'assets/models/props/pallets.glb', h: 1.2, optional: true, r: 0.9 },
+  hotdog_cart: { file: 'assets/models/props/hotdog_cart.glb', h: 1.8, optional: true, r: 1.0 },
+  cones: { file: 'assets/models/props/cones.glb', h: 0.75, optional: true, r: 0 },
+  mothership: { file: 'assets/models/props/mothership.glb', h: 110, optional: true, r: 0 },
+  yacht: { file: 'assets/models/props/yacht.glb', h: 6, optional: true, r: 0, yOff: -1.6 },
+  pier_kiosk: { file: 'assets/models/props/pier_kiosk.glb', h: 3.5, optional: true, r: 2.2 },
+};
+
+// A block is a 34 m square with 10 m streets between. Coordinates are block-grid units.
+const STREET = 10, BLOCK = 34, PITCH = STREET + BLOCK;
+
+export const LEVELS = [
+  {
+    name: 'THE LOOP',
+    subtitle: 'Downtown Chicago — first contact',
+    fog: { color: 0x0a0c1e, density: 0.0048 },
+    sky: { top: [0.02, 0.02, 0.09], horizon: [0.16, 0.07, 0.10], glow: [0.35, 0.12, 0.05] },
+    ambient: 0x3a4a70, ambientI: 0.9, hemi: [0x6a80c0, 0x2a2030, 1.1],
+    sun: { color: 0x9fb4ff, intensity: 1.6, pos: [30, 60, 20] },
+    ground: 0x2a2a2e, arenaRadius: 92,
+    // grid: [gx, gz, key, rotY(deg), scale multiplier]
+    buildings: [
+      [-2, -2, 'skyscraper_046', 0], [-1, -2, 'skyscraper_020', 90], [0, -2, 'residential_018', 0], [1, -2, 'hospital', 0], [2, -2, 'skyscraper_030', 180],
+      [-2, -1, 'residential_022', 90], [2, -1, 'skyscraper_044', 0],
+      [-2, 0, 'police_station', 0], [2, 0, 'industrial_020', 270],
+      [-2, 1, 'residential_015', 0], [2, 1, 'residential_013', 180],
+      [-2, 2, 'skyscraper_048', 0], [-1, 2, 'residential_010', 0], [0, 2, 'industrial_019', 0], [1, 2, 'skyscraper_020', 270], [2, 2, 'skyscraper_016', 180],
+      // inner ring: lower buildings so sightlines stay open
+      [-1, -1, 'residential_013', 0], [1, -1, 'commercial_006', 90], [-1, 1, 'residential_010', 180], [1, 1, 'residential_022', 270],
+    ],
+    // vehicles: [x, z, key, rotY(deg)]
+    vehicles: [
+      [-6, -30, 'car_001', 80], [8, -18, 'van_009', 10], [4, 12, 'car_003', 200], [-14, 6, 'truck_012', 95], [18, 26, 'limo_014', 5],
+      [-30, -8, 'car_003', 0], [30, 10, 'mixer_019', 180], [-22, 30, 'hover_021', 40], [26, -32, 'car_001', 270], [0, 44, 'excavator_013', 90],
+      [-44, 0, 'van_009', 0, 80], [44, -2, 'car_001', 175], [12, -44, 'truck_012', 100, -90], [-10, 40, 'car_003', 20],
+    ],
+    // downed alien hardware as landmarks
+    landmarks: [[46, 46, 'dropship', 30], [-48, -46, 'tripod', 0]],
+    fires: [[-6, -30], [30, 10], [12, -44], [46, 46], [-44, 0]],
+    beams: [[-150, -170], [190, 60]], weather: 'clear', crashes: [[-22, -22], [22, 66]],
+    // neon: on the inner-ring building faces looking onto the plaza streets
+    signs: [[-44, -26.5, 0, 0, 9, 9, 0xff3080], [26.5, -44, 90, 1, 8, 8, 0x30c0ff], [44, 26.5, 180, 2, 9, 9, 0xffb020], [-26.5, 44, 270, 3, 8, 8, 0x40ff90],
+            [-26.5, -44, 90, 2, 12, 7, 0xff3080], [44, -26.5, 0, 3, 11, 7, 0x30c0ff]],
+    props: [
+      // cover around the central plaza
+      [-9, -9, 'barrier_jersey', 45], [9, -9, 'barrier_jersey', -45], [-11, 6, 'barrier_jersey', 90], [11, 6, 'barrier_jersey', 90],
+      [0, -14, 'sandbags', 0], [-16, 0, 'sandbags', 90], [16, 2, 'sandbags', 90], [4, 15, 'sandbags', 0],
+      // checkpoint: a jack-knifed bus across the plaza with a police cordon
+      // intersections: traffic lights + hydrants on the corners
+      // alleys: dumpsters against the inner-ring buildings
+      // wrecks and rubble on the avenues
+      // alien landing zone near the spawn ring
+      [66, 40, 'drop_pod', 20], [-40, -66, 'drop_pod', 160], [-66, 60, 'drop_pod', 300],
+      // bus shelters on the main north-south avenue
+      [-27, 40, 'bus_shelter', 90], [27, -40, 'bus_shelter', 270],
+      // the L: a run of track segments over the north street
+      [-62.5, -110, 'l_track', 0], [-50, -110, 'l_track', 0], [-37.5, -110, 'l_track', 0], [-25, -110, 'l_track', 0], [-12.5, -110, 'l_track', 0], [0, -110, 'l_track', 0], [12.5, -110, 'l_track', 0], [25, -110, 'l_track', 0], [37.5, -110, 'l_track', 0], [50, -110, 'l_track', 0], [62.5, -110, 'l_track', 0],
+    ],
+
+  },
+  {
+    name: 'RIVER NORTH',
+    subtitle: 'Warehouse district — the counter-attack',
+    fog: { color: 0x0c1410, density: 0.0055 },
+    sky: { top: [0.02, 0.04, 0.05], horizon: [0.10, 0.12, 0.08], glow: [0.30, 0.20, 0.05] },
+    ambient: 0x405a50, ambientI: 0.85, hemi: [0x7aa090, 0x24281a, 1.1],
+    sun: { color: 0xc8d8b0, intensity: 1.5, pos: [-30, 50, -20] },
+    ground: 0x26282a, arenaRadius: 92,
+    buildings: [
+      [-2, -2, 'industrial_020', 0], [-1, -2, 'fire_station', 90], [0, -2, 'residential_010', 0], [1, -2, 'industrial_020', 180], [2, -2, 'residential_022', 0],
+      [-2, -1, 'residential_013', 0], [2, -1, 'industrial_019', 270],
+      [-2, 0, 'industrial_019', 90],
+      [-2, 1, 'residential_015', 0], [2, 1, 'industrial_020', 90],
+      [-2, 2, 'skyscraper_044', 0], [-1, 2, 'residential_018', 0], [0, 2, 'industrial_019', 180], [1, 2, 'residential_015', 0], [2, 2, 'skyscraper_030', 0],
+      [-1, 0, 'office_mid', 0], [1, 0, 'residential_010', 90],
+    ],
+    vehicles: [
+      [-8, -24, 'truck_012', 90], [10, -20, 'mixer_019', 0], [6, 16, 'excavator_013', 200], [-16, 8, 'van_009', 95], [22, 30, 'truck_012', 5],
+      [-32, -10, 'car_001', 0, 75], [32, 12, 'car_003', 180], [-24, 32, 'van_009', 40], [28, -30, 'limo_014', 270], [0, -44, 'hover_021', 90],
+    ],
+    landmarks: [[-46, 44, 'dropship', 120], [48, -44, 'tripod', 60]],
+    fires: [[-8, -24], [10, -20], [32, 12], [-32, -10]],
+    beams: [[160, -150], [-180, 40]], weather: 'rain', crashes: [[-22, 22], [66, -22]],
+    signs: [[-44, -26.5, 0, 1, 7, 8, 0x30c0ff], [26.5, 44, 270, 3, 8, 8, 0xffb020], [44, 26.5, 180, 0, 9, 9, 0xff3080], [-26.5, 0, 90, 2, 6, 7, 0x40ff90]],
+    props: [
+      [-10, -8, 'barrier_jersey', 30], [10, -8, 'barrier_jersey', -30], [-12, 8, 'barrier_jersey', 100], [12, 8, 'barrier_jersey', 80],
+      [0, -16, 'sandbags', 0], [-17, 3, 'sandbags', 90], [17, -1, 'sandbags', 90], [2, 16, 'sandbags', 0],
+      [66, 40, 'drop_pod', 20], [-40, -66, 'drop_pod', 160], [-66, 60, 'drop_pod', 300], [40, 66, 'drop_pod', 80],
+      [-27, 40, 'bus_shelter', 90],
+      // container yard on the east-middle block: three aligned rows, two stacks, pallets between
+      [78, -10, 'container', 90], [84, -10, 'container', 90], [90, -10, 'container', 90],
+      [78, -3, 'container', 90], [84, -3, 'container', 90], [90, -3, 'container', 90],
+      [78, 4, 'container', 90], [84, 4, 'container', 90],
+      [78, -10, 'container', 90, 2.6], [84, -3, 'container', 90, 2.6],
+      [78, 11, 'container', 90], [90, 11, 'container', 90],
+      [84, 10, 'pallets', 0], [90, 4, 'pallets', 90], [81, 8, 'pallets', 30],
+      // and a few singles pulled onto the plaza edge as cover
+      [-110, -62.5, 'l_track', 90], [-110, -50, 'l_track', 90], [-110, -37.5, 'l_track', 90], [-110, -25, 'l_track', 90], [-110, -12.5, 'l_track', 90], [-110, 0, 'l_track', 90], [-110, 12.5, 'l_track', 90], [-110, 25, 'l_track', 90], [-110, 37.5, 'l_track', 90], [-110, 50, 'l_track', 90], [-110, 62.5, 'l_track', 90],
+    ],
+
+  },
+  {
+    name: 'LAKEFRONT',
+    subtitle: 'Navy Pier — hold the shoreline',
+    fog: { color: 0x0a1020, density: 0.0040 },
+    sky: { top: [0.01, 0.02, 0.08], horizon: [0.10, 0.10, 0.18], glow: [0.30, 0.16, 0.08] },
+    ambient: 0x3a4a80, ambientI: 0.9, hemi: [0x5a80d0, 0x202838, 1.1],
+    sun: { color: 0xb0c4ff, intensity: 1.5, pos: [-40, 55, 30] },
+    ground: 0x2a2a2e, arenaRadius: 92,
+    // Everything east of x = 22 is Lake Michigan; the pier runs out along z in [-7, 7].
+    lake: { x: 22, pier: { z0: -7, z1: 7, xEnd: 80 } },
+    buildings: [
+      [-2, -2, 'skyscraper_046', 0], [-1, -2, 'skyscraper_020', 90], [0, -2, 'residential_018', 0],
+      [-2, -1, 'hospital', 90], [0, -1, 'commercial_006', 0],
+      [-2, 0, 'skyscraper_044', 0], [-1, 0, 'residential_013', 90],
+      [-2, 1, 'residential_015', 0], [0, 1, 'industrial_019', 180],
+      [-2, 2, 'skyscraper_048', 0], [-1, 2, 'residential_010', 0], [0, 2, 'commercial_006', 90],
+      [-1, -1, 'residential_013', 0], [-1, 1, 'residential_022', 270],
+    ],
+    vehicles: [
+      [-6, -30, 'van_009', 80], [8, -18, 'car_003', 10, 70], [-14, 6, 'truck_012', 95], [4, 30, 'limo_014', 5],
+      [-30, -8, 'car_001', 0], [-22, 30, 'hover_021', 40], [-44, 0, 'mixer_019', 0], [-10, 40, 'car_003', 20], [12, -46, 'car_001', 100],
+    ],
+    landmarks: [[-48, 46, 'dropship', 30], [-48, -46, 'tripod', 0]],
+    fires: [[8, -18], [-44, 0], [4, 30]],
+    beams: [[-160, -150], [-190, 60]], weather: 'clear', crashes: [[-22, -22], [-66, 22]],
+    signs: [[-44, -26.5, 0, 1, 9, 9, 0x30c0ff], [-26.5, 44, 270, 3, 8, 8, 0x40ff90], [-44, 26.5, 180, 0, 9, 9, 0xff3080], [-26.5, -44, 90, 2, 12, 7, 0xffb020]],
+    props: [
+      [-9, -9, 'barrier_jersey', 45], [9, -9, 'barrier_jersey', -45], [-11, 6, 'barrier_jersey', 90], [11, 6, 'barrier_jersey', 90],
+      [0, -14, 'sandbags', 0], [-16, 0, 'sandbags', 90], [16, 2, 'sandbags', 90],
+      [-40, -66, 'drop_pod', 160], [-66, 60, 'drop_pod', 300], [16, -62, 'drop_pod', 40],
+      [-27, 40, 'bus_shelter', 90],
+      // the pier: barriers as rails, kiosks, the wheel at the end, boats alongside
+      [76, 0, 'ferris_wheel', 90],
+      [-110, -64, 'l_track', 90], [-110, -50, 'l_track', 90], [-110, -36, 'l_track', 90], [-110, -22, 'l_track', 90], [-110, -8, 'l_track', 90], [-110, 6, 'l_track', 90], [-110, 20, 'l_track', 90], [-110, 34, 'l_track', 90], [-110, 48, 'l_track', 90], [-110, 62, 'l_track', 90],
+    ],
+    // pier dressing: visual only, so the narrow deck never traps anyone
+    deco: [
+      [30, -6.4, 'barrier_jersey', 0], [38, -6.4, 'barrier_jersey', 0], [46, -6.4, 'barrier_jersey', 0], [54, -6.4, 'barrier_jersey', 0],
+      [30, 6.4, 'barrier_jersey', 0], [38, 6.4, 'barrier_jersey', 0], [46, 6.4, 'barrier_jersey', 0], [54, 6.4, 'barrier_jersey', 0],
+      [34, 4.5, 'pier_kiosk', 0], [58, -4.5, 'pier_kiosk', 180], [66, 4, 'sandbags', 0], [44, -4, 'sandbags', 90],
+      [40, -16, 'yacht', 10], [56, 16, 'yacht', 190], [30, 24, 'yacht', 160],
+    ],
+  },
+];
+
+const _tmpBox = new THREE.Box3();
+
+// Three.js bakes NUM_POINT_LIGHTS into every lit material's shader, so each PointLight in the scene
+// is evaluated per-pixel across the whole screen — a street lamp on the far side of the map costs
+// exactly as much as the one overhead. A dressed city had 36 of them (lamps, neon, fires, beams).
+// Measured on The Loop: 36 lights -> 8 cut render time 2.6x (p95 6.0ms -> 0.9ms).
+// So decorative lights are kept OUT of the scene graph as plain descriptors, and this fixed set of
+// real lights follows the camera, copying whichever descriptors are nearest. The pool size is
+// FIXED on purpose: adding or removing a light (or toggling .visible) changes the light count and
+// forces three.js to recompile every affected material — a 50-200ms stall. Same trap the effects
+// light pool in particles.js exists to avoid.
+const LIGHT_POOL = 8;
+function makeLightPool(group, sources) {
+  const slots = [];
+  for (let i = 0; i < LIGHT_POOL; i++) {
+    const l = new THREE.PointLight(0xffffff, 0, 10, 1.7);
+    group.add(l);
+    slots.push(l);
+  }
+  const scored = [];
+  const _local = new THREE.Vector3();
+  return {
+    sources, slots,
+    update(camPos) {
+      if (!sources.length) return;
+      _local.copy(camPos);
+      group.worldToLocal(_local);
+      scored.length = 0;
+      for (let i = 0; i < sources.length; i++) scored.push({ s: sources[i], d: sources[i].position.distanceToSquared(_local) });
+      scored.sort((a, b) => a.d - b.d);
+      for (let i = 0; i < LIGHT_POOL; i++) {
+        const l = slots[i], pick = scored[i];
+        if (!pick) { l.intensity = 0; continue; }
+        const s = pick.s;
+        l.position.copy(s.position);
+        l.color.copy(s.color);
+        l.distance = s.distance;
+        l.decay = s.decay;
+        // Ramp the far end of the set down instead of switching it off, so a lamp entering or
+        // leaving the nearest-8 fades rather than popping as you walk down a street.
+        const d = Math.sqrt(pick.d), r = s.distance || 20;
+        const fade = Math.max(0, Math.min(1, (r * 3 - d) / r));
+        l.intensity = s.intensity * fade;
+      }
+    },
+  };
+}
+
+export async function buildLevel(scene, def, opts = {}) {
+  const group = new THREE.Group();
+  const colliders = [];
+  // Decorative lights are collected here instead of being added to the scene — see makeLightPool.
+  group.userData.decoLights = [];
+  scene.add(group);
+  const texBase = 'assets/textures/';
+  const hasTex = opts.textures !== false;
+  const lake = def.lake || null;
+  const onLand = (x) => !lake || x < lake.x - 4;
+
+  // Lighting
+  scene.fog = new THREE.FogExp2(def.fog.color, def.fog.density);
+  scene.background = new THREE.Color(def.fog.color);
+  scene.add(new THREE.AmbientLight(def.ambient, def.ambientI));
+  scene.add(new THREE.HemisphereLight(def.hemi[0], def.hemi[1], def.hemi[2]));
+  const sun = new THREE.DirectionalLight(def.sun.color, def.sun.intensity);
+  sun.position.set(...def.sun.pos);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  Object.assign(sun.shadow.camera, { left: -90, right: 90, top: 90, bottom: -90, near: 1, far: 220 });
+  sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.05; sun.shadow.radius = 3;
+  scene.add(sun); scene.add(sun.target);
+  const rim = new THREE.DirectionalLight(0xc040ff, 0.25); rim.position.set(0, 40, -90); scene.add(rim);
+
+  const skyParts = addSky(scene, def.sky);
+
+  // Ground: asphalt everywhere, sidewalk slabs per block.
+  const size = 260;
+  // Wet night asphalt: low roughness so lamps, fires and the sky ring smear across it.
+  const groundMat = new THREE.MeshStandardMaterial({ color: def.ground, roughness: 0.7, metalness: 0.06, envMapIntensity: 1.1 });
+  if (hasTex) {
+    groundMat.map = loadTexture(texBase + 'asphalt.jpg', { repeat: [size / 8, size / 8] });
+    groundMat.roughnessMap = loadTexture(texBase + 'asphalt.jpg', { srgb: false, repeat: [size / 8, size / 8] });
+    groundMat.color.setHex(0x9a9a9a);
+  }
+  // On lake levels the asphalt stops at the shoreline so the water shows.
+  const gw = lake ? (lake.x + size / 2) : size;
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(gw, size), groundMat);
+  ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true;
+  if (lake) ground.position.x = lake.x - gw / 2;
+  group.add(ground);
+  if (lake) addLake(group, colliders, lake, def);
+  const walkMat = new THREE.MeshStandardMaterial({ color: 0x6d6d6a, roughness: 0.95 });
+  if (hasTex) { walkMat.map = loadTexture(texBase + 'sidewalk.jpg', { repeat: [BLOCK / 3, BLOCK / 3] }); walkMat.color.setHex(0xb0b0aa); }
+  const walkGeo = new THREE.BoxGeometry(BLOCK + 3, 0.18, BLOCK + 3);
+  for (let gx = -2; gx <= 2; gx++) for (let gz = -2; gz <= 2; gz++) {
+    if (!onLand(gx * PITCH + BLOCK / 2)) continue;
+    const w = new THREE.Mesh(walkGeo, walkMat);
+    w.position.set(gx * PITCH, 0.09, gz * PITCH); w.receiveShadow = true;
+    group.add(w);
+  }
+  // Road markings: one merged mesh — lane dashes on every street, crosswalks + stop lines at
+  // every intersection. Streets run along x and z at k*PITCH + PITCH/2.
+  const marks = [];
+  const streets = [-1.5, -0.5, 0.5, 1.5].map(k => k * PITCH);
+  const addQuad = (x, z, w, l, rot, y = 0.025) => { const g = new THREE.PlaneGeometry(w, l); g.rotateX(-Math.PI / 2); g.rotateY(rot); g.translate(x, y, z); marks.push(g); };
+  for (const c of streets) {
+    for (let i = -120; i <= 120; i += 8) {
+      if (streets.some(o => Math.abs(i - o) < STREET / 2 + 1)) continue; // gap at intersections
+      if (onLand(c)) addQuad(c, i, 0.22, 3.2, 0);            // street along z, centre dashes
+      if (onLand(i)) addQuad(i, c, 0.22, 3.2, Math.PI / 2);  // street along x
+    }
+    for (const c2 of streets) {
+      if (!onLand(c + 6)) continue;
+      // crosswalk zebra on all four approaches of the intersection (c, c2)
+      for (const [dx, dz, rot] of [[0, 1, 0], [0, -1, 0], [1, 0, Math.PI / 2], [-1, 0, Math.PI / 2]]) {
+        const ox = c + dx * (STREET / 2 + 1.2), oz = c2 + dz * (STREET / 2 + 1.2);
+        for (let k = -3; k <= 3; k++) {
+          const sx = rot ? 0 : k * 1.2, sz = rot ? k * 1.2 : 0;
+          addQuad(ox + sx, oz + sz, rot ? 2.2 : 0.6, rot ? 0.6 : 2.2, 0);
+        }
+        addQuad(ox + dx * 1.8, oz + dz * 1.8, rot ? 0.35 : 8, rot ? 8 : 0.35, 0); // stop line
+      }
+    }
+  }
+  const markGeo = mergeGeometries(marks, false);
+  const markMesh = new THREE.Mesh(markGeo, new THREE.MeshStandardMaterial({ color: 0xd8d0b0, roughness: 0.7, polygonOffset: true, polygonOffsetFactor: -1 }));
+  markMesh.receiveShadow = true; group.add(markMesh);
+
+  // Skyline: rows 3-4 of the grid are filled with buildings beyond the arena (no colliders).
+  // A seeded pick keeps the skyline stable between runs.
+  const skyKeys = Object.keys(CATALOG).filter(k => /skyscraper|residential|industrial/.test(k));
+  let seed = def.name.length * 7919;
+  const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+  const farPlacements = [];
+  for (let gx = -4; gx <= 4; gx++) for (let gz = -4; gz <= 4; gz++) {
+    if (Math.max(Math.abs(gx), Math.abs(gz)) < 3) continue;
+    if (rnd() < 0.15) continue; // gaps read as streets and lots
+    if (lake && gx * PITCH > lake.x) continue; // no towers in the lake
+    const key = skyKeys[Math.floor(rnd() * skyKeys.length)];
+    const far = Math.max(Math.abs(gx), Math.abs(gz)) === 4;
+    farPlacements.push(placeProp(group, colliders, key, gx * PITCH + (rnd() - 0.5) * 6, gz * PITCH + (rnd() - 0.5) * 6, Math.floor(rnd() * 4) * 90, far ? 1.3 + rnd() * 0.9 : 1 + rnd() * 0.4, { collide: false, isBuilding: true }));
+  }
+
+  // Abduction beams: tall additive cylinders of light dropping from the mothership onto the far city.
+  const beamGeo = new THREE.CylinderGeometry(2.5, 6, 160, 16, 1, true);
+  for (const [bx, bz] of def.beams || []) {
+    const m = new THREE.MeshBasicMaterial({ color: 0x40c0ff, transparent: true, opacity: 0.08, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false, toneMapped: false });
+    m.color.multiplyScalar(1.6);
+    const beam = new THREE.Mesh(beamGeo, m); beam.position.set(bx, 80, bz); group.add(beam);
+    const glow = new THREE.PointLight(0x40c0ff, 30, 60, 1.5); glow.position.set(bx, 6, bz); group.userData.decoLights.push(glow);
+  }
+
+  // Buildings (grid placement). Each is normalised to its catalogue height, footprint => collider.
+  const placements = [];
+  const blockBoxes = new Map(); // "gx,gz" -> Box3 of the placed building
+  for (const [gx, gz, key, rot, mul] of def.buildings) {
+    placements.push(placeProp(group, colliders, key, gx * PITCH, gz * PITCH, rot, (mul || 1), { footprint: BLOCK - 2, isBuilding: true })
+      .then(h => { if (h) blockBoxes.set(gx + ',' + gz, new THREE.Box3().setFromObject(h)); return h; }));
+  }
+  for (const [x, z, key, rot, roll] of def.vehicles) placements.push(placeProp(group, colliders, key, x, z, rot, 1, { collide: true, roll: roll || 0 }));
+  for (const [x, z, key, rot, yOff] of def.props || []) placements.push(placeProp(group, colliders, key, x, z, rot, 1, { collide: true, yOff: yOff || 0 }));
+  for (const [x, z, key, rot] of def.deco || []) placements.push(placeProp(group, colliders, key, x, z, rot, 1, { collide: false }));
+  dressCity(def, group, colliders, placements, onLand);
+  for (const [x, z, key, rot] of def.landmarks) placements.push(placeProp(group, colliders, key, x, z, rot, 1, { collide: true }));
+  await Promise.all(placements.concat(farPlacements));
+
+  addNeonSigns(group, def.signs, blockBoxes);
+
+  // Fires: flickering point lights + ember particles are driven by main via `fires`.
+  const fires = [];
+  const fireSpots = (def.fires || []).concat((def.props || []).filter(p => p[2] === 'car_wreck').slice(0, 4).map(p => [p[0], p[1]]));
+  for (const [x, z] of fireSpots) {
+    const l = new THREE.PointLight(0xff7020, 8, 22, 1.6); l.position.set(x, 1.6, z); group.userData.decoLights.push(l);
+    fires.push({ light: l, base: 8, phase: Math.random() * 10, pos: new THREE.Vector3(x, 0.4, z) });
+  }
+  // Street lamps: cool point lights at block corners (no geometry needed at night — the light sells it).
+  const poleGeo = new THREE.CylinderGeometry(0.09, 0.14, 7, 8), armGeo = new THREE.BoxGeometry(1.6, 0.12, 0.12), headGeo = new THREE.BoxGeometry(0.7, 0.18, 0.32);
+  const poleMat = new THREE.MeshStandardMaterial({ color: 0x2e3238, roughness: 0.6, metalness: 0.7 });
+  const lampMat = new THREE.MeshBasicMaterial({ color: 0xffe0a0, toneMapped: false }); lampMat.color.multiplyScalar(2.2);
+  for (let gx = -2; gx <= 2; gx++) for (let gz = -2; gz <= 2; gz++) {
+    if ((gx + gz) % 2 !== 0) continue;
+    const x = gx * PITCH + PITCH / 2, z = gz * PITCH + PITCH / 2;
+    const l = new THREE.PointLight(0xffe7b0, 6, 28, 1.7);
+    l.position.set(x, 6.6, z); group.userData.decoLights.push(l);
+    const pole = new THREE.Mesh(poleGeo, poleMat); pole.position.set(x - 1.2, 3.5, z); pole.castShadow = true; group.add(pole);
+    const arm = new THREE.Mesh(armGeo, poleMat); arm.position.set(x - 0.5, 6.9, z); group.add(arm);
+    const head = new THREE.Mesh(headGeo, lampMat); head.position.set(x, 6.8, z); group.add(head);
+  }
+
+  // Spawn points: street intersections on the outer ring + far corners.
+  // Street intersections on the outer ring (x,z in {-66,-22,22,66}, at least one at |66|): always
+  // on asphalt, inside the arena, never inside a building footprint.
+  const spawnPoints = [];
+  const lines = [-1.5, -0.5, 0.5, 1.5].map(k => k * PITCH);
+  const _sp = new THREE.Vector3();
+  for (const x of lines) for (const z of lines) {
+    if (!onLand(x)) continue;
+    // The inner ring counts too. WaveManager._pickSpawn scores candidates 25-55m from the player
+    // highest, but the outer ring alone sits 62-99m from centre, so every candidate tied at the
+    // fallback score and each wave opened with 15-25s of aliens walking in from the skyline.
+    // Validating against the finished collider set (dressCity has already run) keeps the original
+    // "always on asphalt, never inside a building footprint" guarantee without hardcoding a radius.
+    _sp.set(x, 1, z);
+    let blocked = false;
+    for (const c of colliders) {
+      if (c.isWater) continue;
+      if (_sp.x >= c.min.x && _sp.x <= c.max.x && _sp.z >= c.min.z && _sp.z <= c.max.z) { blocked = true; break; }
+    }
+    if (blocked) continue;
+    spawnPoints.push(new THREE.Vector3(x, 0, z));
+  }
+  if (lake) spawnPoints.push(new THREE.Vector3(lake.pier.xEnd - 12, 0, 0)); // landing at the pier head
+  // Player start: centre plaza
+  const playerStart = new THREE.Vector3(0, 1.7, 8);
+
+  group.traverse((o) => { if (o.isMesh) { o.matrixAutoUpdate = false; o.updateMatrix(); } });
+  const lightPool = makeLightPool(group, group.userData.decoLights);
+  return { group, colliders, spawnPoints, playerStart, fires, lightPool, arenaRadius: def.arenaRadius, name: def.name, water: group.userData.water || null, ship: skyParts.ship };
+}
+
+// Many copies of one prop (trees) as InstancedMesh: one draw call per source mesh instead of
+// one per tree. Each spot: [x, z, rotY, scaleMul]. Colliders are still per instance.
+// ---------------------------------------------------------------------------
+// City dressing with real street logic. Coordinates: blocks centred on k*PITCH (k = -2..2),
+// block half-width 17, sidewalk 14..17 from a block centre, streets centred on k*PITCH+22,
+// street half-width 5. Everything below is deterministic per level.
+// ---------------------------------------------------------------------------
+function dressCity(def, group, colliders, placements, onLand) {
+  let seed = def.name.length * 131 + 7;
+  const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+  const INSTANCED = new Set(['traffic_light', 'bench', 'planter', 'trash_can', 'mailbox', 'news_box', 'hydrant', 'cones', 'dumpster', 'pallets',
+    'car_001', 'car_003', 'taxi', 'van_009', 'limo_014', 'hover_021', 'police_car', 'car_wreck']);
+  const instSpots = new Map();
+  const put = (key, x, z, rot, opts = {}) => {
+    if (!onLand(x + 3)) return;
+    if (INSTANCED.has(key) && !opts.yOff) { if (!instSpots.has(key)) instSpots.set(key, []); instSpots.get(key).push([x, z, rot * Math.PI / 180, opts.mul || 1]); return; }
+    placements.push(placeProp(group, colliders, key, x, z, rot, opts.mul || 1, { collide: opts.collide !== false, yOff: opts.yOff || 0 }));
+  };
+  const B = BLOCK / 2;                      // 17
+  const streets = [-1.5, -0.5, 0.5, 1.5].map(k => k * PITCH);
+  const blocks = [-2, -1, 0, 1, 2].map(k => k * PITCH);
+  const lake = def.lake;
+  const inPark = (gx, gz) => gx === 0 && gz === 0;
+  const treeSpots = [];
+
+  // -- Sidewalks: a tree line near the curb, benches/planters between, bins near corners. --
+  for (const gx of [-2, -1, 0, 1, 2]) for (const gz of [-2, -1, 0, 1, 2]) {
+    const cx = gx * PITCH, cz = gz * PITCH;
+    if (!onLand(cx + B + 2) || inPark(gx, gz)) continue;
+    for (const side of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {      // edge normal
+      const [nx, nz] = side; const tx = -nz, tz = nx;              // edge tangent
+      const ex = cx + nx * 16.6, ez = cz + nz * 16.6;               // tree/furniture lane
+      for (const t of [-10.5, 10.5]) {
+        const x = ex + tx * t, z = ez + tz * t;
+        if (Math.abs(x) > 82 || Math.abs(z) > 82) continue;
+        treeSpots.push([x, z, rnd() * Math.PI * 2, 0.9 + rnd() * 0.25]);
+      }
+      // between the trees: a bench facing the street and a planter, mid-block
+      const facing = Math.atan2(nx, nz) * 180 / Math.PI;           // +Z of the prop toward the street
+      put('bench', ex + tx * -5, ez + tz * -5, facing);
+      put(rnd() < 0.5 ? 'planter' : 'bench', ex + tx * 5, ez + tz * 5, facing);
+      if (rnd() < 0.5) put('planter', ex, ez, facing);
+      if (rnd() < 0.35) put('trash_can', ex + tx * 14.2, ez + tz * 14.2, facing);
+    }
+  }
+  placements.push(placeInstanced(group, colliders, 'tree', treeSpots));
+
+  // -- Intersections: a signal on each corner facing the crossing, hydrant + mail cluster. --
+  for (const sx of streets) for (const sz of streets) {
+    if (!onLand(sx + 8)) continue;
+    let i = 0;
+    for (const [dx, dz] of [[1, 1], [-1, 1], [-1, -1], [1, -1]]) {
+      const x = sx + dx * 6.4, z = sz + dz * 6.4;
+      const rot = Math.atan2(sx - x, sz - z) * 180 / Math.PI;      // face the centre
+      put('traffic_light', x, z, rot);
+      if (i === 0) put('hydrant', x + dx * 1.6, z - dz * 0.8, rot);
+      if (i === 2) { put('mailbox', x + dx * 1.5, z + dz * 0.4, rot); put('news_box', x - dx * 0.2, z + dz * 1.8, rot); put('trash_can', x + dx * 1.9, z + dz * 2.0, rot); }
+      i++;
+    }
+  }
+
+  // -- Parking: cars along both curbs of every street segment, oriented with the street. --
+  const parked = ['car_001', 'car_003', 'taxi', 'van_009', 'car_003', 'limo_014', 'taxi', 'hover_021', 'car_001'];
+  const segs = [];
+  for (const c of streets) for (let k = 0; k < blocks.length; k++) {
+    const a0 = blocks[k] - 10, a1 = blocks[k] + 10;              // the stretch beside block k, clear of corners
+    segs.push({ axis: 'z', c, a0, a1 }); segs.push({ axis: 'x', c, a0, a1 });
+  }
+  for (const sg of segs) {
+    for (let a = sg.a0; a <= sg.a1; a += 8.5) {
+      for (const curb of [-1, 1]) {
+        if (rnd() > 0.38) continue;
+        const off = sg.c + curb * 3.0;
+        const x = sg.axis === 'z' ? off : a, z = sg.axis === 'z' ? a : off;
+        if (Math.abs(x) < 20 && Math.abs(z) < 20) continue;      // keep the plaza frontage clear
+        if (Math.abs(x) > 84 || Math.abs(z) > 84) continue;
+        let key = parked[Math.floor(rnd() * parked.length)];
+        if (rnd() < 0.12) key = 'car_wreck';
+        // parked cars point along the street; the direction flips with the curb (right-hand traffic)
+        const rot = (sg.axis === 'z' ? 0 : 90) + (curb > 0 ? 0 : 180) + (rnd() - 0.5) * 6;
+        put(key, x, z, rot);
+      }
+    }
+  }
+
+  // -- Crash sites: two intersections get a pile-up that doubles as cover. --
+  const crashAt = def.crashes || [[-22, -22], [22, 22]];
+  for (const [x, z] of crashAt) {
+    if (!onLand(x + 8)) continue;
+    put('cta_bus', x + 1, z - 1, 35 + rnd() * 20);
+    put('car_wreck', x - 6, z + 5, 110 + rnd() * 30);
+    put('car_wreck', x + 7, z + 6, 200 + rnd() * 30);
+    put('police_car', x - 7, z - 6, 320 + rnd() * 20);
+    put('cones', x + 5, z - 7, rnd() * 360); put('cones', x - 3, z + 9, rnd() * 360);
+    put('rubble', x + 9, z - 3, rnd() * 360);
+  }
+
+  // -- The park: the centre block is a plaza with a tree ring, benches facing in, planters. --
+  if (!lake || onLand(B + 2)) {
+    for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4 + Math.PI / 8; treeSpots.push([Math.cos(a) * 12.5, Math.sin(a) * 12.5, rnd() * Math.PI * 2, 1.0 + rnd() * 0.2]); }
+    for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; put('planter', Math.cos(a) * 8.5, Math.sin(a) * 8.5, a * 180 / Math.PI + 90); }
+    for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + Math.PI / 4; put('bench', Math.cos(a) * 10.5, Math.sin(a) * 10.5, Math.atan2(-Math.cos(a), -Math.sin(a)) * 180 / Math.PI); }
+    for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2; put('trash_can', Math.cos(a) * 15.5, Math.sin(a) * 15.5, 0); }
+    put('hotdog_cart', 14.5, -14.5, 225); put('hotdog_cart', -14.5, 14.5, 45);
+  }
+
+  // -- Alleys: every building block gets a dumpster tucked against its back corner + pallets. --
+  for (const gx of [-2, -1, 0, 1, 2]) for (const gz of [-2, -1, 0, 1, 2]) {
+    if (inPark(gx, gz) || !onLand(gx * PITCH + B + 2)) continue;
+    const cx = gx * PITCH, cz = gz * PITCH;
+    const sx = gx === 0 ? (rnd() < 0.5 ? 1 : -1) : Math.sign(gx), sz = gz === 0 ? (rnd() < 0.5 ? 1 : -1) : Math.sign(gz);
+    put('dumpster', cx + sx * 15.3, cz + sz * 12.5, sx > 0 ? 90 : 270);
+    if (rnd() < 0.5) put('pallets', cx + sx * 15.3, cz + sz * 9.8, rnd() * 40);
+  }
+  for (const [key, spots] of instSpots) placements.push(placeInstanced(group, colliders, key, spots));
+}
+
+async function placeInstanced(group, colliders, key, spots) {
+  if (!spots.length) return null;
+  const cat = CATALOG[key];
+  let src;
+  try { src = await instantiate(cat.file); } catch (e) { return null; }
+  normalize(src, cat.h);
+  if (/tree|planter/.test(cat.file)) src.traverse((o) => { if (o.isMesh && o.material && !o.material.__night) { const m = o.material; m.color.setRGB(0.16, 0.24, 0.2); m.roughness = 0.95; m.metalness = 0; m.envMapIntensity = 0.2; m.__night = true; } });
+  else if (/vehicle_|car_wreck|taxi|police/.test(cat.file)) src.traverse((o) => { if (o.isMesh && o.material && !o.material.__night) { const m = o.material; m.color.multiplyScalar(0.6); m.roughness = Math.max(m.roughness, 0.45); m.__night = true; } });
+  src.updateMatrixWorld(true);
+  const meshes = []; src.traverse((o) => { if (o.isMesh) meshes.push(o); });
+  const m4 = new THREE.Matrix4(), local = new THREE.Matrix4(), q = new THREE.Quaternion(), pos = new THREE.Vector3(), scl = new THREE.Vector3();
+  for (const mesh of meshes) {
+    const inst = new THREE.InstancedMesh(mesh.geometry, mesh.material, spots.length);
+    inst.castShadow = true; inst.receiveShadow = false; inst.frustumCulled = false;
+    for (let i = 0; i < spots.length; i++) {
+      const [x, z, rot, mul] = spots[i];
+      q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), rot); pos.set(x, 0, z); scl.setScalar(mul);
+      m4.compose(pos, q, scl); m4.multiply(mesh.matrixWorld);
+      inst.setMatrixAt(i, m4);
+    }
+    inst.instanceMatrix.needsUpdate = true;
+    group.add(inst);
+  }
+  const isVehicle = /vehicle_|car_wreck|taxi|police|cta_bus/.test(cat.file);
+  if (cat.r) for (const [x, z, rot] of spots) {
+    // Vehicles: an oriented box (long along the parked direction, 1 m half-width across).
+    let hx = cat.r, hz = cat.r;
+    if (isVehicle) { const alongX = Math.abs(Math.sin(rot)) > 0.7; hx = alongX ? cat.r : 1.0; hz = alongX ? 1.0 : cat.r; }
+    const b = new THREE.Box3(new THREE.Vector3(x - hx, 0, z - hz), new THREE.Vector3(x + hx, Math.max(1.2, cat.h), z + hz));
+    if (!isVehicle && cat.h < 2.5) b.soft = true; // enemies may step over furniture when boxed in
+    colliders.push(b);
+  }
+  return src;
+}
+
+async function placeProp(group, colliders, key, x, z, rotDeg, mul, { footprint = null, collide = true, isBuilding = false, roll = 0, yOff = 0 } = {}) {
+  const cat = CATALOG[key];
+  let obj;
+  try { obj = await instantiate(cat.file); }
+  catch (e) {
+    if (cat.optional) return null;
+    // Asset not on disk yet: block it out so the level still plays.
+    const h = cat.h * mul, w = isBuilding ? 26 : 4.5;
+    obj = new THREE.Mesh(new THREE.BoxGeometry(w, h, w), new THREE.MeshStandardMaterial({ color: isBuilding ? 0x3a3f4a : 0x555555, roughness: 0.8 }));
+    obj.position.y = h / 2; obj.castShadow = obj.receiveShadow = true;
+  }
+  const holder = new THREE.Group();
+  holder.add(obj);
+  normalize(obj, cat.h * mul);
+  if (isBuilding) {
+    // Trellis bakes daylight into the albedo; pull it down so towers read as night-lit concrete
+    // and glass, and let the env map give the facades a little sheen.
+    obj.traverse((o) => { if (o.isMesh && o.material && !o.material.__night) { const m = o.material; m.color.multiplyScalar(0.42); m.roughness = 0.75; m.metalness = 0.15; m.envMapIntensity = 0.9; m.__night = true; } });
+    // Fill the block: widen the footprint toward the block size (capped so facades don't smear).
+    if (footprint) {
+      const bb = new THREE.Box3().setFromObject(obj); const sz = new THREE.Vector3(); bb.getSize(sz);
+      const want = footprint - 6;
+      obj.scale.x *= THREE.MathUtils.clamp(want / Math.max(sz.x, 1), 1, 1.45);
+      obj.scale.z *= THREE.MathUtils.clamp(want / Math.max(sz.z, 1), 1, 1.45);
+    }
+  } else if (/\/tree\.glb|planter/.test(cat.file)) {
+    // Foliage bakes come in bright daylight green; pull them into the night palette.
+    obj.traverse((o) => { if (o.isMesh && o.material && !o.material.__night) { const m = o.material; m.color.setRGB(0.16, 0.24, 0.2); m.roughness = 0.95; m.metalness = 0; m.envMapIntensity = 0.2; m.__night = true; } });
+  } else if (/vehicle_|car_wreck|cta_bus|taxi|police/.test(cat.file)) {
+    obj.traverse((o) => { if (o.isMesh && o.material && !o.material.__night) { const m = o.material; m.color.multiplyScalar(0.6); m.roughness = Math.max(m.roughness, 0.45); m.__night = true; } });
+  }
+  holder.rotation.y = THREE.MathUtils.degToRad(rotDeg);
+  if (roll) { obj.rotation.z = THREE.MathUtils.degToRad(roll); const bb = new THREE.Box3().setFromObject(obj); obj.position.y -= bb.min.y; }
+  holder.position.set(x, (cat.yOff || 0) + yOff, z);
+  group.add(holder);
+  holder.updateMatrixWorld(true);
+  if (collide) {
+    const box = new THREE.Box3().setFromObject(holder);
+    if (isBuilding) {
+      // Trellis buildings have decorative overhangs; use a tightened box so the player can hug walls.
+      const c = new THREE.Vector3(); box.getCenter(c);
+      const s = new THREE.Vector3(); box.getSize(s);
+      s.x = Math.min(s.x, footprint) * 0.92; s.z = Math.min(s.z, footprint) * 0.92;
+      box.setFromCenterAndSize(c, s);
+    } else if (cat.r != null) {
+      // Small props: a snug square collider around the base so the player can slip past corners.
+      const c = new THREE.Vector3(); box.getCenter(c);
+      box.setFromCenterAndSize(c, new THREE.Vector3(cat.r * 2, Math.max(0.5, box.max.y - box.min.y), cat.r * 2));
+    } else {
+      box.expandByScalar(-0.15);
+    }
+    box.min.y = 0;
+    if (cat.r !== 0) colliders.push(box);
+  }
+  return holder;
+}
+
+
+// Neon signs: emissive quads from a 2x2 sheet (assets/decals/neon.png), each with a matching
+// point light. `signs`: [x, z, rotY(deg), variant 0-3, height, width, colorHex].
+function addNeonSigns(group, signs, blockBoxes) {
+  if (!signs || !signs.length) return;
+  const map = loadTexture('assets/decals/neon.png', { srgb: true, anisotropy: 4 });
+  for (let [x, z, rot, v, y, w, color] of signs) {
+    // Snap to the real face of the building on this block: the sign's facing tells us which face.
+    const gx = Math.round(x / PITCH), gz = Math.round(z / PITCH);
+    const bb = blockBoxes && blockBoxes.get(gx + ',' + gz);
+    if (bb) {
+      const r = ((rot % 360) + 360) % 360;
+      if (r === 0) z = bb.max.z + 0.15; else if (r === 180) z = bb.min.z - 0.15; else if (r === 90) x = bb.max.x + 0.15; else if (r === 270) x = bb.min.x - 0.15;
+      if (r === 0 || r === 180) x = THREE.MathUtils.clamp(x, bb.min.x + w / 2, bb.max.x - w / 2); else z = THREE.MathUtils.clamp(z, bb.min.z + w / 2, bb.max.z - w / 2);
+      y = Math.min(y, bb.max.y - 2);
+    }
+    const g = new THREE.PlaneGeometry(w, w * 0.78);
+    const uv = g.attributes.uv; const ox = (v % 2) * 0.5, oy = v < 2 ? 0.5 : 0;
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, ox + uv.getX(i) * 0.5, oy + uv.getY(i) * 0.5);
+    const m = new THREE.MeshBasicMaterial({ map, transparent: true, toneMapped: false, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending });
+    m.color.setScalar(1.8);
+    const mesh = new THREE.Mesh(g, m); mesh.position.set(x, y, z); mesh.rotation.y = THREE.MathUtils.degToRad(rot); mesh.renderOrder = 3;
+    group.add(mesh);
+    const l = new THREE.PointLight(color, 14, 22, 1.7); l.position.set(x + Math.sin(mesh.rotation.y) * 1.5, y - 1, z + Math.cos(mesh.rotation.y) * 1.5); group.userData.decoLights.push(l);
+    mesh.userData.flicker = Math.random() < 0.5; mesh.userData.light = l; mesh.userData.base = 14;
+  }
+}
+
+// Lake Michigan: an animated reflective water plane east of the shoreline, a concrete pier out
+// into it, a seawall step along the shore, and colliders that keep everyone out of the water.
+function addLake(group, colliders, lake, def) {
+  const W = 400;
+  const normals = loadTexture('assets/textures/waternormals.jpg', { srgb: false, repeat: [1, 1] });
+  normals.wrapS = normals.wrapT = THREE.RepeatWrapping;
+  const water = new Water(new THREE.PlaneGeometry(W, W), {
+    textureWidth: 512, textureHeight: 512, waterNormals: normals,
+    sunDirection: new THREE.Vector3(...def.sun.pos).normalize(), sunColor: 0x6070a0, waterColor: 0x020a14, distortionScale: 3.6, fog: true,
+  });
+  water.rotation.x = -Math.PI / 2; water.position.set(lake.x + W / 2, -0.6, 0);
+  water.material.uniforms.alpha.value = 0.78; water.material.uniforms.size.value = 3.0;
+  water.userData.animate = true; water.matrixAutoUpdate = false; water.updateMatrix();
+  group.add(water); group.userData.water = water;
+  // Seawall along the shore + the pier deck (concrete, sidewalk texture).
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0x4a4a48, roughness: 0.9 });
+  const seawall = new THREE.Mesh(new THREE.BoxGeometry(2, 1.6, 260), wallMat); seawall.position.set(lake.x, 0.2, 0); seawall.receiveShadow = true; group.add(seawall);
+  const p = lake.pier; const pierLen = p.xEnd - lake.x;
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(pierLen, 1.4, p.z1 - p.z0), new THREE.MeshStandardMaterial({ color: 0x6a6a66, roughness: 0.85, map: loadTexture('assets/textures/sidewalk.jpg', { repeat: [pierLen / 3, (p.z1 - p.z0) / 3] }) }));
+  deck.position.set(lake.x + pierLen / 2, -0.6, (p.z0 + p.z1) / 2); deck.receiveShadow = true; group.add(deck);
+  for (let x = lake.x + 6; x < p.xEnd; x += 8) { const pile = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.6, 4, 8), wallMat); pile.position.set(x, -2, p.z0 + 0.6); group.add(pile); const pile2 = pile.clone(); pile2.position.z = p.z1 - 0.6; group.add(pile2); }
+  // Colliders: water north and south of the pier, and beyond the pier head. Tall so nothing crosses.
+  const far = 400;
+  for (const b of [new THREE.Box3(new THREE.Vector3(lake.x, 0, p.z1), new THREE.Vector3(lake.x + far, 6, far)),
+                   new THREE.Box3(new THREE.Vector3(lake.x, 0, -far), new THREE.Vector3(lake.x + far, 6, p.z0)),
+                   new THREE.Box3(new THREE.Vector3(p.xEnd, 0, -far), new THREE.Vector3(lake.x + far, 6, far))]) { b.isWater = true; colliders.push(b); }
+  // Pier lights
+  for (let x = lake.x + 10; x < p.xEnd; x += 16) { const l = new THREE.PointLight(0xffe0b0, 6, 24, 1.7); l.position.set(x, 5, 0); group.userData.decoLights.push(l); }
+}
+
+function addSky(scene, sky) {
+  const geo = new THREE.SphereGeometry(600, 24, 16);
+  const cols = [];
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const t = THREE.MathUtils.clamp((pos.getY(i) / 600 + 0.15) / 1.15, 0, 1);
+    const glow = Math.pow(1 - t, 6);
+    cols.push(sky.top[0] * t + sky.horizon[0] * (1 - t) + sky.glow[0] * glow,
+              sky.top[1] * t + sky.horizon[1] * (1 - t) + sky.glow[1] * glow,
+              sky.top[2] * t + sky.horizon[2] * (1 - t) + sky.glow[2] * glow);
+  }
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+  const dome = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide, fog: false, depthWrite: false }));
+  dome.renderOrder = -10;
+  scene.add(dome);
+  // Stars
+  const n = 1500, sp = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2, e = Math.acos(Math.random() * 0.9 + 0.1);
+    sp[i * 3] = Math.cos(a) * Math.sin(e) * 580; sp[i * 3 + 1] = Math.cos(e) * 580; sp[i * 3 + 2] = Math.sin(a) * Math.sin(e) * 580;
+  }
+  const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(sp, 3));
+  const stars = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xffffff, size: 1.6, sizeAttenuation: false, fog: false, transparent: true, opacity: 0.8 }));
+  scene.add(stars);
+  // The mothership: the authored saucer hangs low over the north of the city, unfogged so it
+  // reads from every street; a pulsing core under it feeds the bloom. Until the prop exists a
+  // dark ring stands in.
+  const shipPos = new THREE.Vector3(0, 150, -190);
+  const holder = new THREE.Group(); holder.position.copy(shipPos); scene.add(holder);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(120, 12, 12, 48), new THREE.MeshStandardMaterial({ color: 0x1a1030, roughness: 0.7, metalness: 0.5, emissive: 0x30104a, emissiveIntensity: 0.6, fog: false }));
+  ring.rotation.x = Math.PI / 2; holder.add(ring);
+  instantiate(CATALOG.mothership.file).then((obj) => {
+    holder.remove(ring);
+    normalize(obj, CATALOG.mothership.h);
+    const bb = new THREE.Box3().setFromObject(obj); const sz = new THREE.Vector3(); bb.getSize(sz);
+    obj.position.y -= sz.y * 0.5; // centre the hull on the holder
+    obj.traverse((o) => { if (o.isMesh && o.material) { const m = o.material; m.fog = false; m.emissive = new THREE.Color(0xff30d0); m.emissiveMap = m.map; m.emissiveIntensity = 1.8; m.color.multiplyScalar(1.2); m.envMapIntensity = 0.2; m.needsUpdate = true; } });
+    holder.add(obj);
+  }).catch(() => {});
+  const core = new THREE.Mesh(new THREE.SphereGeometry(9, 20, 14), new THREE.MeshBasicMaterial({ color: 0xff40e0, toneMapped: false, fog: false }));
+  core.material.color.multiplyScalar(2.5); core.position.set(0, -14, 0); holder.add(core);
+  const glow = new THREE.PointLight(0xff40e0, 900, 170, 1.4); glow.position.set(0, -30, 0); holder.add(glow);
+  holder.userData.spin = 0.015;
+  return { dome, stars, ring, core, ship: holder };
+}
+
+// Cheap point-vs-colliders test used by controls for player movement.
+export function collidesAt(colliders, x, z, r) {
+  for (let i = 0; i < colliders.length; i++) {
+    const b = colliders[i];
+    if (x + r > b.min.x && x - r < b.max.x && z + r > b.min.z && z - r < b.max.z) return b;
+  }
+  return null;
+}

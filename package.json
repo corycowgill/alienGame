@@ -1,0 +1,23 @@
+{
+  "name": "ufo-shooter-2",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "serve": "node tools/serve.mjs",
+    "test": "node tools/playtest.mjs smoke",
+    "validate": "node tools/validate-glb.mjs assets/models"
+  },
+  "dependencies": {
+    "@gltf-transform/core": "^4.5.0",
+    "@gltf-transform/extensions": "^4.5.0",
+    "@gltf-transform/functions": "^4.5.0",
+    "draco3dgltf": "^1.5.7",
+    "meshoptimizer": "^1.3.0",
+    "sharp": "^0.35.4"
+  },
+  "devDependencies": {
+    "@gltf-transform/cli": "^4.5.0",
+    "puppeteer-core": "^25.11.0"
+  }
+}

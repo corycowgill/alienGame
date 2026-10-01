@@ -1,0 +1,146 @@
+[
+ {
+  "name": "building_residential_010",
+  "class": "street",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. A two-storey greystone apartment building, heavily retrofitted: glowing cyan and magenta smart-glass windows, a holographic sign, armoured steel shutters over the ground floor, rooftop comms dishes and a drone pad, thick boxed cable raceways down the facade, magenta neon strips along the cornice. Two windows blown out and boarded, soot streaks, impact scoring. Night, wet neon glow, fire glow. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials."
+ },
+ {
+  "name": "building_residential_013",
+  "class": "street",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. A three-storey red-brick three-flat with a wooden porch stack, heavily retrofitted: glowing cyan and magenta smart-glass windows, a holographic sign, armoured steel shutters over the ground floor, rooftop comms dishes and a drone pad, thick boxed cable raceways down the facade, magenta neon strips along the cornice. Two windows blown out and boarded, soot streaks, impact scoring. Night, wet neon glow, fire glow. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials."
+ },
+ {
+  "name": "building_residential_015",
+  "class": "street",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. A three-storey brown-brick courtyard apartment wing, heavily retrofitted: glowing cyan and magenta smart-glass windows, a holographic sign, armoured steel shutters over the ground floor, rooftop comms dishes and a drone pad, thick boxed cable raceways down the facade, magenta neon strips along the cornice. Two windows blown out and boarded, soot streaks, impact scoring. Night, wet neon glow, fire glow. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials."
+ },
+ {
+  "name": "building_residential_018",
+  "class": "street",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. A seven-storey 1920s brick apartment block with a terracotta cornice, heavily retrofitted: glowing cyan and magenta smart-glass windows, a holographic sign, armoured steel shutters over the ground floor, rooftop comms dishes and a drone pad, thick boxed cable raceways down the facade, magenta neon strips along the cornice. Two windows blown out and boarded, soot streaks, impact scoring. Night, wet neon glow, fire glow. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials."
+ },
+ {
+  "name": "building_residential_022",
+  "class": "street",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. A five-storey brick mixed-use building, retail below, chamfered corner entrance, heavily retrofitted: glowing cyan and magenta smart-glass windows, a holographic sign, armoured steel shutters over the ground floor, rooftop comms dishes and a drone pad, thick boxed cable raceways down the facade, magenta neon strips along the cornice. Two windows blown out and boarded, soot streaks, impact scoring. Night, wet neon glow, fire glow. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials."
+ },
+ {
+  "name": "building_commercial_006",
+  "class": "street",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. A single-storey corner tavern and storefront row in dark brick, heavily retrofitted: glowing cyan and magenta smart-glass windows, a holographic sign, armoured steel shutters over the ground floor, rooftop comms dishes and a drone pad, thick boxed cable raceways down the facade, magenta neon strips along the cornice. Two windows blown out and boarded, soot streaks, impact scoring. Night, wet neon glow, fire glow. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials."
+ },
+ {
+  "name": "building_industrial_019",
+  "class": "street",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. A low brick warehouse with roll-up dock doors, heavily retrofitted: glowing cyan and magenta smart-glass windows, a holographic sign, armoured steel shutters over the ground floor, rooftop comms dishes and a drone pad, thick boxed cable raceways down the facade, magenta neon strips along the cornice. Two windows blown out and boarded, soot streaks, impact scoring. Night, wet neon glow, fire glow. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials."
+ },
+ {
+  "name": "building_industrial_020",
+  "class": "street",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. A six-storey timber-and-brick industrial loft with a rooftop water tower, heavily retrofitted: glowing cyan and magenta smart-glass windows, a holographic sign, armoured steel shutters over the ground floor, rooftop comms dishes and a drone pad, thick boxed cable raceways down the facade, magenta neon strips along the cornice. Two windows blown out and boarded, soot streaks, impact scoring. Night, wet neon glow, fire glow. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials."
+ },
+ {
+  "name": "building_skyscraper_016",
+  "class": "tower",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. A mid-century bronze-and-glass office tower, Mies idiom, heavily retrofitted: cool white and ice-blue window light in a dark curtain wall, a restrained corporate logo panel glowing pale blue, rooftop comms dishes, aviation strobes, boxed service risers. A band of windows blown out, soot streaks, impact scoring. Night, cold blue city glow, distant fire glow. Restrained lighting - this is a corporate tower, not a nightclub. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials."
+ },
+ {
+  "name": "building_skyscraper_020",
+  "class": "tower",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. An art-deco limestone setback skyscraper, heavily retrofitted: cool white and ice-blue window light in a dark curtain wall, a restrained corporate logo panel glowing pale blue, rooftop comms dishes, aviation strobes, boxed service risers. A band of windows blown out, soot streaks, impact scoring. Night, cold blue city glow, distant fire glow. Restrained lighting - this is a corporate tower, not a nightclub. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials."
+ },
+ {
+  "name": "building_skyscraper_030",
+  "class": "tower",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. A curved reflective glass office tower, heavily retrofitted: cool white and ice-blue window light in a dark curtain wall, a restrained corporate logo panel glowing pale blue, rooftop comms dishes, aviation strobes, boxed service risers. A band of windows blown out, soot streaks, impact scoring. Night, cold blue city glow, distant fire glow. Restrained lighting - this is a corporate tower, not a nightclub. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials."
+ },
+ {
+  "name": "building_skyscraper_044",
+  "class": "tower",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. A terracotta-clad commercial tower with an ornate cornice, heavily retrofitted: cool white and ice-blue window light in a dark curtain wall, a restrained corporate logo panel glowing pale blue, rooftop comms dishes, aviation strobes, boxed service risers. A band of windows blown out, soot streaks, impact scoring. Night, cold blue city glow, distant fire glow. Restrained lighting - this is a corporate tower, not a nightclub. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials."
+ },
+ {
+  "name": "building_skyscraper_046",
+  "class": "tower",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. A tall slender tube-frame tower with visible cross-bracing, heavily retrofitted: cool white and ice-blue window light in a dark curtain wall, a restrained corporate logo panel glowing pale blue, rooftop comms dishes, aviation strobes, boxed service risers. A band of windows blown out, soot streaks, impact scoring. Night, cold blue city glow, distant fire glow. Restrained lighting - this is a corporate tower, not a nightclub. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials."
+ },
+ {
+  "name": "building_skyscraper_048",
+  "class": "tower",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. A postmodern pink-grey granite tower with a barrel-vaulted crown, heavily retrofitted: cool white and ice-blue window light in a dark curtain wall, a restrained corporate logo panel glowing pale blue, rooftop comms dishes, aviation strobes, boxed service risers. A band of windows blown out, soot streaks, impact scoring. Night, cold blue city glow, distant fire glow. Restrained lighting - this is a corporate tower, not a nightclub. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials."
+ },
+ {
+  "name": "building_hospital",
+  "class": "hospital",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. A modern city hospital: a pale slab ward tower of six storeys sitting on a wider two-storey podium, continuous horizontal ribbon windows wrapping every floor, a curved double-height glass entrance atrium bulging out at one corner, an enclosed skybridge stub on one flank. Clean and clinical, NOT grimy: white composite cladding, pale blue-green medical glow in the windows, a large illuminated red cross high on the slab, a brightly lit white ambulance canopy with red EMERGENCY bars, a rooftop helipad ringed with white landing lights, white rooftop air handling units. Minimal grime, light scorching at one corner only. Night. Cold clinical white and pale blue light with red emergency accents. Almost no magenta or purple. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials.",
+  "height": 24
+ },
+ {
+  "name": "building_office_mid",
+  "class": "tower",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. A corporate office block: a sheer seven-storey dark glass curtain-wall slab set back above a pale stone two-storey podium, a recessed plaza entrance under a thin flat canopy, a mechanical penthouse stepped back at the top. Cool white and ice-blue window light, a restrained corporate logo panel glowing pale blue, rooftop comms dishes, aviation strobes, boxed service risers. A band of windows blown out, soot streaks. Night, cold blue city glow, distant fire glow. Restrained lighting - a corporate tower, not a nightclub. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials.",
+  "height": 28
+ },
+ {
+  "name": "building_police_station",
+  "class": "police",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. A fortified district police station, brutalist not brick: a squat heavy board-marked concrete block, wider than it is tall, with deep-set narrow slit windows, angled buttress walls battering outward at the base, a cantilevered entry canopy, and a tall slim comms mast rising off one end. A blue illuminated POLICE light bar across the canopy, two blue beacon lamps flanking a heavy steel door, a blue-and-white checkerboard band along the base, blast shutters, a secure sally-port vehicle bay with a rising steel gate, floodlit forecourt. Scorched and dented from the fighting. Night. Police blue and white floodlight, red and blue beacon glow. No magenta or pink. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials.",
+  "height": 12
+ },
+ {
+  "name": "building_fire_station",
+  "class": "fire",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. A firehouse, wide and low with an unmistakable silhouette: a single broad two-storey engine house whose entire front is three tall arched apparatus bays glowing amber from inside, and a tall narrow square hose drill tower spiking up above the roofline at one end. Red brick and red steel, amber and red warning beacons over each bay, a reflective red-and-white chevron band along the base, a corbelled brick cornice, rooftop comms dish. Soot above the bays. Night. Warm amber and red emergency light. No magenta or cyan. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials.",
+  "height": 10
+ },
+ {
+  "name": "vehicle_civilian_001",
+  "class": "vehicle",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. An abandoned mid-size sedan, dull silver: sealed composite panels, a slim sensor pod, dark smart-glass, cyan running lights, a charge port. Abandoned mid-invasion: dust, a cracked panel, soot. Night, wet neon reflections. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials."
+ },
+ {
+  "name": "vehicle_civilian_003",
+  "class": "vehicle",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. A full-size SUV, dark blue, roof rack: sealed composite panels, a slim sensor pod, dark smart-glass, cyan running lights, a charge port. Abandoned mid-invasion: dust, a cracked panel, soot. Night, wet neon reflections. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials."
+ },
+ {
+  "name": "vehicle_civilian_009",
+  "class": "vehicle",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. A white panel delivery van: sealed composite panels, a slim sensor pod, dark smart-glass, cyan running lights, a charge port. Abandoned mid-invasion: dust, a cracked panel, soot. Night, wet neon reflections. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials."
+ },
+ {
+  "name": "vehicle_civilian_012",
+  "class": "vehicle",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. A cab-over box truck, dirty white: sealed composite panels, a slim sensor pod, dark smart-glass, cyan running lights, a charge port. Abandoned mid-invasion: dust, a cracked panel, soot. Night, wet neon reflections. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials."
+ },
+ {
+  "name": "vehicle_civilian_013",
+  "class": "vehicle",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. A compact tracked excavator, yellow, boom folded down: sealed composite panels, a slim sensor pod, dark smart-glass, cyan running lights, a charge port. Abandoned mid-invasion: dust, a cracked panel, soot. Night, wet neon reflections. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials."
+ },
+ {
+  "name": "vehicle_civilian_014",
+  "class": "vehicle",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. A black stretch limousine with one flat tyre: sealed composite panels, a slim sensor pod, dark smart-glass, cyan running lights, a charge port. Abandoned mid-invasion: dust, a cracked panel, soot. Night, wet neon reflections. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials."
+ },
+ {
+  "name": "vehicle_civilian_019",
+  "class": "vehicle",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. A concrete mixer truck, grey and orange: sealed composite panels, a slim sensor pod, dark smart-glass, cyan running lights, a charge port. Abandoned mid-invasion: dust, a cracked panel, soot. Night, wet neon reflections. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials."
+ },
+ {
+  "name": "vehicle_civilian_021",
+  "class": "vehicle",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. A Chicago police interceptor sedan, white with a blue checkerboard band, low light bar, wheeled not hovering: sealed composite panels, a slim sensor pod, dark smart-glass, cyan running lights, a charge port. Abandoned mid-invasion: dust, a cracked panel, soot. Night, wet neon reflections. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials."
+ },
+ {
+  "name": "vehicle_alien_003",
+  "class": "alien",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. An alien troop dropship with two downward-angled engine pods: violet and bronze alien alloy, glowing cyan seams along every joint, organic curved plating. Night, cold alien glow. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials."
+ },
+ {
+  "name": "vehicle_alien_019",
+  "class": "alien",
+  "prompt": "Square 1024x1024 image. Cyberpunk near-future Chicago, year 2045, mid alien invasion. An alien walker: a bulbous armoured pod on three thick tapering legs, single magenta lens: violet and bronze alien alloy, glowing cyan seams along every joint, organic curved plating. Night, cold alien glow. Centred, whole object in frame, plain flat light-gray background, no floor shadow, no text, no people. Thick solid forms only, no thin wires or aerials."
+ }
+]
