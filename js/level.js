@@ -74,7 +74,7 @@ export const LEVELS = [
   {
     name: 'THE LOOP',
     subtitle: 'Downtown Chicago — first contact',
-    fog: { color: 0x0a0c1e, density: 0.0048 },
+    fog: { color: 0x0a0c1e, density: 0.0032 },
     sky: { top: [0.02, 0.02, 0.09], horizon: [0.16, 0.07, 0.10], glow: [0.35, 0.12, 0.05] },
     ambient: 0x3a4a70, ambientI: 0.9, hemi: [0x6a80c0, 0x2a2030, 1.1],
     sun: { color: 0x9fb4ff, intensity: 1.6, pos: [30, 60, 20] },
@@ -122,7 +122,7 @@ export const LEVELS = [
   {
     name: 'RIVER NORTH',
     subtitle: 'Warehouse district — the counter-attack',
-    fog: { color: 0x0c1410, density: 0.0055 },
+    fog: { color: 0x0c1410, density: 0.00367 },
     sky: { top: [0.02, 0.04, 0.05], horizon: [0.10, 0.12, 0.08], glow: [0.30, 0.20, 0.05] },
     ambient: 0x405a50, ambientI: 0.85, hemi: [0x7aa090, 0x24281a, 1.1],
     sun: { color: 0xc8d8b0, intensity: 1.5, pos: [-30, 50, -20] },
@@ -163,7 +163,7 @@ export const LEVELS = [
   {
     name: 'LAKEFRONT',
     subtitle: 'Navy Pier — hold the shoreline',
-    fog: { color: 0x0a1020, density: 0.0040 },
+    fog: { color: 0x0a1020, density: 0.00267 },
     sky: { top: [0.01, 0.02, 0.08], horizon: [0.10, 0.10, 0.18], glow: [0.30, 0.16, 0.08] },
     ambient: 0x3a4a80, ambientI: 0.9, hemi: [0x5a80d0, 0x202838, 1.1],
     sun: { color: 0xb0c4ff, intensity: 1.5, pos: [-40, 55, 30] },
